@@ -25,7 +25,14 @@ class PlanLearner(object):
         self.config = settings
         physical_devices = tf.config.experimental.list_physical_devices('GPU')
         if len(physical_devices) > 0:
-            tf.config.experimental.set_memory_growth(physical_devices[0], True)
+            try:
+                tf.config.experimental.set_virtual_device_configuration(physical_devices[0],
+                    [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=128)])
+                logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+                print(len(physical_devices), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+                # tf.config.experimental.set_memory_growth(physical_devices[0], True)
+            except RuntimeError as e:
+                print(e)
 
         self.min_val_loss = tf.Variable(np.inf,
                                         name='min_val_loss',

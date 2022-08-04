@@ -6,7 +6,9 @@ from dagger_training import Trainer
 
 def main():
     parser = argparse.ArgumentParser(description='Evaluate Trajectory tracker.')
-    parser.add_argument('--settings_file', help='Path to settings yaml', required=True)
+    parser.add_argument('--settings_file', help='Path to settings yaml', required=False,
+                        default='config/test_settings.yaml')
+
 
     args = parser.parse_args()
     settings_filepath = args.settings_file

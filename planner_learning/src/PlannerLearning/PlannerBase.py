@@ -83,6 +83,9 @@ class PlanBase(object):
         self.timer_net = rospy.Timer(rospy.Duration(1. / self.config.network_frequency),
                                      self._generate_plan)
 
+        self.infer_pose_pub = rospy.Publisher("infer_pose_pub", Odometry, queue_size=10)
+
+
     def load_trajectory(self, traj_fname):
         self.reference_initialized = False
         traj_df = pd.read_csv(traj_fname, delimiter=',')
@@ -204,13 +207,13 @@ class PlanBase(object):
         try:
             if self.quad_name == 'hummingbird':
                 depth = self.bridge.imgmsg_to_cv2(data, '16UC1')
-                # print("============================================================")
-                # print("Min Depth {}. Max Depth {}. with Nans {}".format(np.min(depth),
-                #                                                        np.max(depth),
-                #                                                        np.any(np.isnan(depth))))
-                # print("Min Depth {}. Max Depth {}. with Nans {}".format(np.min(depth),
-                #                                                        np.max(depth),
-                #                                                        np.any(np.isnan(depth))))
+                print("============================================================")
+                print("Min Depth {}. Max Depth {}. with Nans {}".format(np.min(depth),
+                                                                       np.max(depth),
+                                                                       np.any(np.isnan(depth))))
+                print("Min Depth {}. Max Depth {}. with Nans {}".format(np.min(depth),
+                                                                       np.max(depth),
+                                                                       np.any(np.isnan(depth))))
             elif self.quad_name == 'hawk':
                 # print("Received depth image from hawk!")
                 # the depth sensor is mounted in a flipped configuration on the quadrotor, so flip image first
@@ -380,33 +383,32 @@ class PlanBase(object):
     def _prepare_net_inputs(self):
         if not self.net_initialized:
             # prepare the elements that need to be fetched in the list
-            required_elements = np.arange(start=0, stop=self.config.input_update_freq,
-                                          step=int(np.ceil(self.config.input_update_freq / self.config.seq_len)),
-                                          dtype=np.int64)
-            required_elements = -1 * (required_elements + 1)  # we need to take things at the end :)
-            self.required_elements = [i for i in reversed(required_elements.tolist())]
+            # required_elements = np.arange(start=0, stop=self.config.input_update_freq,
+            #                               step=int(np.ceil(self.config.input_update_freq / self.config.seq_len)),
+            #                               dtype=np.int64)
+            # required_elements = -1 * (required_elements + 1)  # we need to take things at the end :)
+            # self.required_elements is always [-1] if seq_len is 1
+            # to make network input with
+            # self.required_elements = [i for i in reversed(required_elements.tolist())]
+            self.required_elements = [-1]
             # return fake input for init
-            if self.config.use_bodyrates:
+            if self.config.use_bodyrates:  # True
                 n_init_states = 21
             else:
                 n_init_states = 18
-            inputs = {'rgb': np.zeros((1, self.config.seq_len, self.config.img_height, self.config.img_width, 3),
-                                      dtype=np.float32),
-                      'depth': np.zeros((1, self.config.seq_len, self.config.img_height, self.config.img_width, 3),
-                                        dtype=np.float32),
-                      'imu': np.zeros((1, self.config.seq_len, n_init_states), dtype=np.float32)}
+            inputs = {'depth': np.zeros((1, self.config.seq_len, self.config.img_height, self.config.img_width, 3),
+                                        dtype=np.float32),  # (1,1,224,224,3)
+                      'imu': np.zeros((1, self.config.seq_len, n_init_states), dtype=np.float32)}  # (1,1,21)
             self.net_inputs = inputs
             return
-        state_inputs = np.stack(self.select_inputs_in_freq(self.state_queue), axis=0)
-        state_inputs = np.array(state_inputs, dtype=np.float32)
+        # state_inputs = np.stack(self.select_inputs_in_freq(self.state_queue), axis=0)
+        # state_inputs = np.array(state_inputs, dtype=np.float32)
+        state_inputs = np.array([self.state_queue[-1]], dtype=np.float32)
         new_dict = {'imu': np.expand_dims(state_inputs, axis=0)}
-        if self.config.use_rgb:
-            img_inputs = np.stack(self.select_inputs_in_freq(self.img_queue), axis=0)
-            img_inputs = np.array(img_inputs, dtype=np.float32)
-            new_dict['rgb'] = np.expand_dims(img_inputs, axis=0)
         if self.config.use_depth:
-            depth_inputs = np.stack(self.select_inputs_in_freq(self.depth_queue), axis=0)
-            depth_inputs = np.array(depth_inputs, dtype=np.float32)
+            # depth_inputs = np.stack(self.select_inputs_in_freq(self.depth_queue), axis=0)
+            # depth_inputs = np.array(depth_inputs, dtype=np.float32)
+            depth_inputs = np.array([self.depth_queue[-1]], dtype=np.float32)
             new_dict['depth'] = np.expand_dims(depth_inputs, axis=0)
         self.odometry_used_for_inference = copy.deepcopy(self.odometry)
         self.time_prediction = rospy.Time.now()
@@ -456,5 +458,26 @@ class PlanBase(object):
             self.callback_land(Empty())
 
         self._prepare_net_inputs()
+
+        imu_data = self.net_inputs['imu']
+        imu_data = imu_data.squeeze()
+        xyz_pose = imu_data[:3]
+
+        rot_mat = imu_data[3:12]
+
+        rot = R.from_matrix(rot_mat.reshape(3, 3))
+        rot_qaut = rot.as_quat()
+        infer_odometry = Odometry()
+        infer_odometry.pose.pose.position.x = xyz_pose[0]
+        infer_odometry.pose.pose.position.y = xyz_pose[1]
+        infer_odometry.pose.pose.position.z = xyz_pose[2]
+        infer_odometry.pose.pose.orientation.x = rot_qaut[0]
+        infer_odometry.pose.pose.orientation.y = rot_qaut[1]
+        infer_odometry.pose.pose.orientation.z = rot_qaut[2]
+        infer_odometry.pose.pose.orientation.w = rot_qaut[3]
+        infer_odometry.header.stamp = rospy.Time.now()
+        infer_odometry.header.frame_id = "world"
+        self.infer_pose_pub.publish(infer_odometry)
+
         results = self.learner.inference(self.net_inputs)
         self.trajectory_decision(results)

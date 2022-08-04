@@ -4,6 +4,8 @@ from tensorflow.keras.layers import Dense, Conv2D, LeakyReLU, Conv1D
 from tensorflow.keras.layers import Flatten, GlobalAveragePooling2D, MaxPool2D, LayerNormalization, BatchNormalization
 # from tensorflow.python.keras.applications import densenet
 from tensorflow.python.keras.applications import mobilenet
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 
 def create_network(settings):
