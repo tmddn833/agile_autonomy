@@ -6,7 +6,6 @@ add_compile_options(-std=c++17)
 add_compile_options(-O3)
 
 find_package(catkin_simple REQUIRED COMPONENTS)
-
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 find_package(CUDA REQUIRED)
@@ -45,15 +44,31 @@ target_link_libraries(flightmare_bridge stdc++fs
         zmq
         zmqpp)
 
+
 cs_add_executable(agile_autonomy src/agile_autonomy.cpp)
+cs_add_executable(agile_autonomy_airsim src/agile_autonomy_airsim.cpp)
+
 target_include_directories(agile_autonomy PUBLIC
         ../../../rpg_mpc/model/quadrotor_mpc_codegen/
         ../../../rpg_mpc/externals/qpoases
         ../../../rpg_mpc/externals/qpoases/INCLUDE
         ../../../rpg_mpc/externals/qpoases/SRC)
+
+target_include_directories(agile_autonomy_airsim PUBLIC
+        ../../../rpg_mpc/model/quadrotor_mpc_codegen/
+        ../../../rpg_mpc/externals/qpoases
+        ../../../rpg_mpc/externals/qpoases/INCLUDE
+        ../../../rpg_mpc/externals/qpoases/SRC)
+
 target_link_libraries(
         agile_autonomy stdc++fs
         flightmare_bridge
+        ${catkin_LIBRARIES}
+        ${OpenCV_LIBS}
+)
+
+target_link_libraries(
+        agile_autonomy_airsim stdc++fs
         ${catkin_LIBRARIES}
         ${OpenCV_LIBS}
 )

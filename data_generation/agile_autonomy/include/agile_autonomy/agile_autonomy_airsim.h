@@ -29,7 +29,7 @@
 #include "std_msgs/Float32.h"
 #include "visualization_msgs/MarkerArray.h"
 
-#include "agile_autonomy/flightmare_bridge.h"
+//#include "agile_autonomy/flightmare_bridge.h"
 
 namespace agile_autonomy {
 
@@ -38,8 +38,6 @@ class AgileAutonomy {
   AgileAutonomy(const ros::NodeHandle& nh, const ros::NodeHandle& pnh);
 
   AgileAutonomy() : AgileAutonomy(ros::NodeHandle(), ros::NodeHandle("~")) {}
-
-  virtual ~AgileAutonomy();
 
  private:
   enum class StateMachine {
@@ -53,7 +51,7 @@ class AgileAutonomy {
   ros::NodeHandle pnh_;
 
   logging::Logging logging_helper_;
-  std::shared_ptr<flightmare_bridge::FlightmareBridge> flightmare_bridge_;
+//  std::shared_ptr<flightmare_bridge::FlightmareBridge> flightmare_bridge_;
   std::shared_ptr<visualizer::Visualizer> visualizer_;
 
   ros::Subscriber toggle_experiment_sub_;
@@ -71,17 +69,19 @@ class AgileAutonomy {
   ros::Publisher ref_progress_pub_;
   ros::Publisher setpoint_pub_;
   ros::Publisher compute_global_path_pub_;
+  ros::Publisher mavros_position_pub_;
+  ros::Publisher mavros_velocity_pub_;
+  ros::Publisher mavros_accel_pub_;
 
-    ros::Publisher contorl_est_state_pub_;
+  ros::Publisher contorl_est_state_pub_;
 
-
-    ros::Timer save_timer_;
+  ros::Timer save_timer_;
 
   void computeManeuver(const bool only_expert);
 
   void startExecutionCallback(const std_msgs::BoolConstPtr& msg);
 
-  void setupLoggingCallback(const std_msgs::BoolConstPtr& msg);
+  void setupLoggingCallback(const std_msgs::EmptyConstPtr& msg);
 
   void stopFlyingCallback(const std_msgs::BoolConstPtr& msg);
 

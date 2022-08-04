@@ -62,6 +62,9 @@ AgileAutonomy::AgileAutonomy(const ros::NodeHandle& nh,
   compute_global_path_pub_ =
       pnh_.advertise<std_msgs::Float32>("compute_global_plan", 1);
 
+    contorl_est_state_pub_ =
+            nh_.advertise<geometry_msgs::PoseStamped>("control_odom", 10);
+
   // Saving timer
   save_timer_ = nh_.createTimer(ros::Duration(1.0 / save_freq_),
                                 &AgileAutonomy::saveLoop, this);
@@ -653,6 +656,19 @@ void AgileAutonomy::odometryCallback(const nav_msgs::OdometryConstPtr& msg) {
     setpoint_pub_.publish(reference_trajectory.points.front().toRosMessage());
     control_cmd = base_controller_.run(predicted_state, reference_trajectory,
                                        base_controller_params_);
+
+      geometry_msgs::PoseStamped contorl_est_state;
+      contorl_est_state.header.stamp = ros::Time::now();
+      contorl_est_state.header.frame_id = "world";
+      contorl_est_state.pose.position.x = predicted_state.position.x();
+      contorl_est_state.pose.position.y = predicted_state.position.y();
+      contorl_est_state.pose.position.z = predicted_state.position.z();
+      contorl_est_state.pose.orientation.x = predicted_state.orientation.x();
+      contorl_est_state.pose.orientation.y = predicted_state.orientation.y();
+      contorl_est_state.pose.orientation.z = predicted_state.orientation.z();
+      contorl_est_state.pose.orientation.w = predicted_state.orientation.w();
+      contorl_est_state_pub_.publish(contorl_est_state);
+
     control_cmd.timestamp = time_now;
     control_cmd.expected_execution_time = cmd_execution_time;
     const ros::Duration control_computation_time =
