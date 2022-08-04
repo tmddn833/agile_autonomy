@@ -14,20 +14,22 @@
 #include "agile_autonomy_utils/logging.h"
 #include "agile_autonomy_utils/trajectory_ext.h"
 #include "agile_autonomy_utils/visualize.h"
-#include "autopilot/autopilot_helper.h"
+
+//#include "autopilot/autopilot_helper.h"
+
 #include "nav_msgs/Odometry.h"
 #include "quadrotor_common/trajectory.h"
-#include "quadrotor_msgs/Trajectory.h"
-#include "ros/ros.h"
+//#include "quadrotor_msgs/Trajectory.h"
+//#include "ros/ros.h"
 #include "rpg_common/pose.h"
-#include "rpg_mpc/mpc_controller.h"
-#include "sensor_msgs/Image.h"
-#include "sgm_gpu/sgm_gpu.h"
+//#include "rpg_mpc/mpc_controller.h"
+//#include "sensor_msgs/Image.h"
+//#include "sgm_gpu/sgm_gpu.h"
 #include "state_predictor/state_predictor.h"
 #include "std_msgs/Bool.h"
 #include "std_msgs/Empty.h"
-#include "std_msgs/Float32.h"
-#include "visualization_msgs/MarkerArray.h"
+//#include "std_msgs/Float32.h"
+//#include "visualization_msgs/MarkerArray.h"
 
 //#include "agile_autonomy/flightmare_bridge.h"
 
@@ -54,32 +56,32 @@ class AgileAutonomy {
 //  std::shared_ptr<flightmare_bridge::FlightmareBridge> flightmare_bridge_;
   std::shared_ptr<visualizer::Visualizer> visualizer_;
 
-  ros::Subscriber toggle_experiment_sub_;
+//  ros::Subscriber toggle_experiment_sub_;
   ros::Subscriber odometry_sub_;
   ros::Subscriber setup_logging_sub_;
   ros::Subscriber start_flying_sub_;
   ros::Subscriber traj_sub_;
-  ros::Subscriber land_sub_;
-  ros::Subscriber force_hover_sub_;
-  ros::Subscriber off_sub_;
+//  ros::Subscriber land_sub_;
+//  ros::Subscriber force_hover_sub_;
+//  ros::Subscriber off_sub_;
   ros::Subscriber completed_global_plan_sub_;
 
-  ros::Publisher control_command_pub_;
+//  ros::Publisher control_command_pub_;
   ros::Publisher start_flying_pub_;
   ros::Publisher ref_progress_pub_;
   ros::Publisher setpoint_pub_;
-  ros::Publisher compute_global_path_pub_;
+//  ros::Publisher compute_global_path_pub_;
   ros::Publisher mavros_position_pub_;
   ros::Publisher mavros_velocity_pub_;
   ros::Publisher mavros_accel_pub_;
 
   ros::Publisher contorl_est_state_pub_;
 
-  ros::Timer save_timer_;
+//  ros::Timer save_timer_;
 
   void computeManeuver(const bool only_expert);
 
-  void startExecutionCallback(const std_msgs::BoolConstPtr& msg);
+//  void startExecutionCallback(const std_msgs::BoolConstPtr& msg);
 
   void setupLoggingCallback(const std_msgs::EmptyConstPtr& msg);
 
@@ -87,22 +89,22 @@ class AgileAutonomy {
 
   void odometryCallback(const nav_msgs::OdometryConstPtr& msg);
 
-  void saveLoop(const ros::TimerEvent& time);
+//  void saveLoop(const ros::TimerEvent& time);
 
   void trajectoryCallback(
       const agile_autonomy_msgs::MultiTrajectoryConstPtr& msg);
 
-  void landCallback(const std_msgs::EmptyConstPtr& msg);
+//  void landCallback(const std_msgs::EmptyConstPtr& msg);
 
-  void offCallback(const std_msgs::EmptyConstPtr& msg);
+//  void offCallback(const std_msgs::EmptyConstPtr& msg);
 
-  void forceHoverCallback(const std_msgs::EmptyConstPtr& msg);
+//  void forceHoverCallback(const std_msgs::EmptyConstPtr& msg);
 
   quadrotor_common::QuadStateEstimate getPredictedStateEstimate(
       const ros::Time& time, const state_predictor::StatePredictor* predictor);
 
-  void publishControlCommand(
-      const quadrotor_common::ControlCommand& control_command);
+//  void publishControlCommand(
+//      const quadrotor_common::ControlCommand& control_command);
 
   bool loadParameters();
 
@@ -113,7 +115,7 @@ class AgileAutonomy {
 
   double yawFromQuaternion(const Eigen::Quaterniond& q);
 
-  void completedGlobalPlanCallback(const std_msgs::BoolConstPtr& msg);
+//  void completedGlobalPlanCallback(const std_msgs::BoolConstPtr& msg);
 
   bool convertTrajectoriesToWorldFrame(
       const std::vector<quadrotor_common::Trajectory>& nw_trajectories,
@@ -125,7 +127,7 @@ class AgileAutonomy {
   int reference_progress_abs_;
 
   bool save_network_trajectories_ = true;
-  bool unity_is_ready_ = false;
+//  bool unity_is_ready_ = false;
   bool enable_yawing_ = false;
   bool reference_ready_ = false;
 
@@ -140,13 +142,13 @@ class AgileAutonomy {
   quadrotor_common::Trajectory prev_ref_traj_;
   ros::Time t_prev_ref_traj_;
 
-  TrajectoryExt prev_solution_;
+//  TrajectoryExt prev_solution_;
 
   // MPC controller variant
-  rpg_mpc::MpcController<double> base_controller_ =
-      rpg_mpc::MpcController<double>(ros::NodeHandle(), ros::NodeHandle("~"),
-                                     "vio_mpc_path");
-  rpg_mpc::MpcParams<double> base_controller_params_;
+//  rpg_mpc::MpcController<double> base_controller_ =
+//      rpg_mpc::MpcController<double>(ros::NodeHandle(), ros::NodeHandle("~"),
+//                                     "vio_mpc_path");
+//  rpg_mpc::MpcParams<double> base_controller_params_;
   state_predictor::StatePredictor state_predictor_;
 
   /////////////////////////////////////
@@ -170,8 +172,8 @@ class AgileAutonomy {
   static constexpr int viz_id_start_ = 10;
   int viz_id_ = viz_id_start_;
   int num_traj_viz_;
-  std::vector<double> sample_times_;
-  std::vector<double> fine_sample_times_;
+//  std::vector<double> sample_times_;
+//  std::vector<double> fine_sample_times_;
 
   // Maneuver
   int rollout_counter_ = 0;
@@ -193,10 +195,10 @@ class AgileAutonomy {
   double cam_pitch_angle_ = 0.0;
 
   // Data generation
-  int frame_counter_ = 0;
+//  int frame_counter_ = 0;
   int pred_traj_idx_ = 0;
 
-  bool only_expert_ = false;
+//  bool only_expert_ = false;
   bool setup_done_ = false;
 };
 

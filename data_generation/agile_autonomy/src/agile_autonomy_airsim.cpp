@@ -1,15 +1,12 @@
 #include "agile_autonomy/agile_autonomy_airsim.h"
 
-#include <glog/logging.h>
-#include <stdio.h>
-#include <experimental/filesystem>
-#include <iomanip>
+//#include <glog/logging.h>
+//#include <stdio.h>
+//#include <experimental/filesystem>
+//#include <iomanip>
 #include <string>
-
 #include <Eigen/Dense>
-#include <opencv2/core.hpp>
 #include "agile_autonomy_utils/generate_reference.h"
-#include "minimum_jerk_trajectories/RapidTrajectoryGenerator.h"
 #include "quadrotor_common/parameter_helper.h"
 #include "quadrotor_common/trajectory_point.h"
 #include "std_msgs/Int32.h"
@@ -51,8 +48,8 @@ namespace agile_autonomy {
         // Publishers
         ref_progress_pub_ = // no one subscribe but for examine the progress
                 pnh_.advertise<std_msgs::Int32>("reference_progress", 1); //
-        control_command_pub_ = //published in odometry's callback, topic to simulator
-                nh_.advertise<quadrotor_msgs::ControlCommand>("autopilot/control_command_input", 1);
+//        control_command_pub_ = //published in odometry's callback, topic to simulator
+//                nh_.advertise<quadrotor_msgs::ControlCommand>("autopilot/control_command_input", 1);
         start_flying_pub_ = //agile_auto <-> python , publish when activate network fly
                 pnh_.advertise<std_msgs::Bool>("start_flying", 1);
         setpoint_pub_ = //useless.. but visualization
@@ -84,7 +81,7 @@ namespace agile_autonomy {
             reference_progress_abs_ = 0;
             ROS_INFO("Switching to kComputeLabels");
             network_prediction_.clear();
-            base_controller_.off();
+//            base_controller_.off();
             visualizer_->clearBuffers();
             state_machine_ = StateMachine::kComputeLabels;
         }
@@ -583,14 +580,14 @@ namespace agile_autonomy {
 
             ////////////////////////////
 
-            control_cmd = base_controller_.run(predicted_state, reference_trajectory,
-                                               base_controller_params_);
-
-            control_cmd.timestamp = time_now;
-            control_cmd.expected_execution_time = cmd_execution_time;
-            const ros::Duration control_computation_time =
-                    ros::Time::now() - start_control_command_computation;
-            publishControlCommand(control_cmd);
+//            control_cmd = base_controller_.run(predicted_state, reference_trajectory,
+//                                               base_controller_params_);
+//
+//            control_cmd.timestamp = time_now;
+//            control_cmd.expected_execution_time = cmd_execution_time;
+//            const ros::Duration control_computation_time =
+//                    ros::Time::now() - start_control_command_computation;
+//            publishControlCommand(control_cmd);
         }
     }
 
@@ -600,16 +597,16 @@ namespace agile_autonomy {
         return predictor->predictState(time);
     }
 
-    void AgileAutonomy::publishControlCommand(
-            const quadrotor_common::ControlCommand &control_command) {
-        if (state_machine_ == StateMachine::kExecuteExpert ||
-            state_machine_ == StateMachine::kNetwork) {
-            quadrotor_msgs::ControlCommand control_cmd_msg;
-            control_cmd_msg = control_command.toRosMessage();
-            control_command_pub_.publish(control_cmd_msg);
-            state_predictor_.pushCommandToQueue(control_command);
-        }
-    }
+//    void AgileAutonomy::publishControlCommand(
+//            const quadrotor_common::ControlCommand &control_command) {
+//        if (state_machine_ == StateMachine::kExecuteExpert ||
+//            state_machine_ == StateMachine::kNetwork) {
+//            quadrotor_msgs::ControlCommand control_cmd_msg;
+//            control_cmd_msg = control_command.toRosMessage();
+//            control_command_pub_.publish(control_cmd_msg);
+//            state_predictor_.pushCommandToQueue(control_command);
+//        }
+//    }
 
     bool AgileAutonomy::loadParameters() {
         ROS_INFO("Loading parameters...");
