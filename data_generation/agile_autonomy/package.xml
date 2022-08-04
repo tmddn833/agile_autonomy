@@ -12,12 +12,12 @@
   <buildtool_depend>catkin</buildtool_depend>
   <buildtool_depend>catkin_simple</buildtool_depend>
 
-  <depend>autopilot</depend>
-  <depend>cv_bridge</depend>
+  <!-- <depend>autopilot</depend> -->
+  <!-- <depend>cv_bridge</depend> -->
   <depend>eigen_catkin</depend>
-  <depend>gazebo_msgs</depend>
-  <depend>glog_catkin</depend>
-  <depend>minimum_jerk_trajectories</depend>
+  <!-- <depend>gazebo_msgs</depend> -->
+  <!-- <depend>glog_catkin</depend> -->
+  <!-- <depend>minimum_jerk_trajectories</depend> -->
   <depend>agile_autonomy_msgs</depend>
   <depend>agile_autonomy_utils</depend>
   <depend>quadrotor_common</depend>
@@ -29,7 +29,7 @@
   <depend>state_predictor</depend>
   <depend>std_msgs</depend>
   <depend>nav_msgs</depend>
-  <depend>rpgq_simulator</depend>
+  <!-- <depend>rpgq_simulator</depend> -->
 
   <export>
 

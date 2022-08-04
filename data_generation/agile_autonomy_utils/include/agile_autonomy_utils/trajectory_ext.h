@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Dense>
 #include "quadrotor_common/trajectory.h"
 
 struct TrajectoryExtPoint {

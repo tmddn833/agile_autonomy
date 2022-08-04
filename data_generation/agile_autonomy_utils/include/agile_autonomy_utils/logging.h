@@ -3,7 +3,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include "Eigen/Eigen"
+#include "eigen3/Eigen/Eigen"
 #include "agile_autonomy_utils/trajectory_ext.h"
 #include "quadrotor_common/quad_state_estimate.h"
 #include "quadrotor_common/trajectory.h"
