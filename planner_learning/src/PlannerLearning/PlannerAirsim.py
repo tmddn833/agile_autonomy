@@ -5,12 +5,11 @@ import os
 import numpy as np
 import rospy
 
-try:
-    from cv2 import cv2
-except:
-    import cv2
+import cv2
 import pandas as pd
 import tensorflow as tf
+import matplotlib.pyplot as plt
+import ros_numpy
 
 from cv_bridge import CvBridge, CvBridgeError
 from nav_msgs.msg import Odometry
@@ -34,7 +33,6 @@ class PlanLearningAirsim(object):
         self.reference_initialized = False
         self.odometry_used_for_inference = None
         self.time_prediction = None
-        self.last_depth_received = rospy.Time.now()
         self.reference_progress = 0
         self.reference_len = 1
         self.end_ref_percentage = 0.8
@@ -68,8 +66,9 @@ class PlanLearningAirsim(object):
                                                   self.callback_gt_odometry,
                                                   queue_size=1)
         if self.config.use_depth:
-            self.depth_sub = rospy.Subscriber("/" + self.quad_name + "/" + self.depth_topic, Image,
-                                              self.callback_depth, queue_size=1)
+            print('depth topic subscribe')
+            self.depth_sub = rospy.Subscriber("/zedm/zed_node/depth/depth_registered", Image, 
+                                                self.callback_depth,queue_size=1)
 
         self.fly_sub = rospy.Subscriber("/" + self.quad_name + "/agile_autonomy/start_flying", Bool,
                                         self.callback_fly, queue_size=1)  # Receive and fly, python<->agile_autonomy
@@ -85,6 +84,7 @@ class PlanLearningAirsim(object):
         self.infer_pose_pub = rospy.Publisher("infer_pose_pub", Odometry, queue_size=10)
 
         # Timer update input and pub traj
+        self.last_depth_received = rospy.Time.now()
         self.timer_input = rospy.Timer(rospy.Duration(1. / self.config.input_update_freq),
                                        self.update_input_queues)
         self.timer_net = rospy.Timer(rospy.Duration(1. / self.config.network_frequency),
@@ -113,39 +113,39 @@ class PlanLearningAirsim(object):
                                 odometry.pose.pose.orientation.y,
                                 odometry.pose.pose.orientation.z,
                                 odometry.pose.pose.orientation.w])
-        self.odom_rot_input = rot_body.as_matrix().reshape((9,)).tolist()
-        self.odom_rot = rot_body.as_matrix().reshape((9,)).tolist()
+        self.odom_rot_input = rot_body.as_dcm().reshape((9,)).tolist()
+        self.odom_rot = rot_body.as_dcm().reshape((9,)).tolist()
         self.odometry = odometry
 
     def callback_depth(self, data):
         '''
         Reads a depth image and saves it.
         '''
-        try:
-            if self.quad_name == 'hummingbird':
-                depth = self.bridge.imgmsg_to_cv2(data, '16UC1')
-                # print("============================================================")
-                # print("Min Depth {}. Max Depth {}. with Nans {}".format(np.min(depth),
-                #                                                         np.max(depth),
-                #                                                         np.any(np.isnan(depth))))
-                # print("Min Depth {}. Max Depth {}. with Nans {}".format(np.min(depth),
-                #                                                         np.max(depth),
-                #                                                         np.any(np.isnan(depth))))
-            else:
-                print("Invalid quad_name!")
-                raise NotImplementedError
-            if (np.sum(depth) != 0) and (not np.any(np.isnan(depth))):
-                depth = np.minimum(depth, 20000)
-                dim = (self.config.img_width, self.config.img_height)
-                depth = cv2.resize(depth, dim)
-                depth = np.array(depth, dtype=np.float32)
-                depth = depth / (80)  # normalization factor to put depth in (0,255)
-                depth = np.expand_dims(depth, axis=-1)
-                depth = np.tile(depth, (1, 1, 3))
-                self.depth = depth
-                self.last_depth_received = rospy.Time.now()
-        except CvBridgeError as e:
-            print(e)
+        if self.quad_name == 'hummingbird':
+            depth = self.bridge.imgmsg_to_cv2(data, '8UC1')
+            # depth = np.frombuffer(data.data, dtype=np.uint16)
+            print("============================================================")
+            print("Min Depth {}. Max Depth {}. with Nans {}".format(np.min(depth),
+                                                                    np.max(depth),
+                                                                    np.any(np.isnan(depth))))
+            print("Min Depth {}. Max Depth {}. with Nans {}".format(np.min(depth),
+                                                                    np.max(depth),
+                                                                    np.any(np.isnan(depth))))
+        else:
+            print("Invalid quad_name!")
+            raise NotImplementedError
+        if (np.sum(depth) != 0) and (not np.any(np.isnan(depth))):
+            # depth = np.minimum(depth, 20000)
+            dim = (self.config.img_width, self.config.img_height)
+            depth = cv2.resize(depth, dim)
+            depth = np.array(depth, dtype=np.float32)
+            # depth = depth / (80)  # normalization factor to put depth in (0,255)
+            depth = np.expand_dims(depth, axis=-1)
+            depth = np.tile(depth, (1, 1, 3))
+            # cv2.imshow("depth_input", depth)
+            # cv2.waitKey(1)
+            self.depth = depth
+            self.last_depth_received = rospy.Time.now()
 
     # def callback_success_reset(self, data):
     #     # at this point agile autonomy plan reference trajectory
@@ -382,7 +382,7 @@ class PlanLearningAirsim(object):
                 (not self.config.perform_inference):
             return
         t_start = rospy.Time.now()
-        if (t_start - self.last_depth_received).to_sec() > 5.0:
+        if (t_start - self.last_depth_received).to_sec() > 10.0:
             print("Stopping because no depth received")
             self.maneuver_complete = True
             # self.callback_land(Empty())
@@ -397,7 +397,7 @@ class PlanLearningAirsim(object):
 
         rot_mat = imu_data[3:12]
 
-        rot = R.from_matrix(rot_mat.reshape(3, 3))
+        rot = R.from_dcm(rot_mat.reshape(3, 3))
         rot_qaut = rot.as_quat()
         infer_odometry = Odometry()
         infer_odometry.pose.pose.position.x = xyz_pose[0]

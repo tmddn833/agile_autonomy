@@ -1,0 +1,6 @@
+<launch>
+    <!--mav gcs-->
+    <node name="mav_gcs_node" pkg="px4_code" type="mav_gcs_node"/>
+    <!-- Visualization -->
+    <node pkg="rviz" type="rviz" name="viz_face" args="-d $(find agile_autonomy)/resources/rviz/simulation_airsim.rviz"/>
+</launch>

@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<launch>
+    <!--    agile_autonomy-->
+    <arg name="quad_name" default="hummingbird"/>
+    <param name="/$(arg quad_name)/agile_autonomy/general/real_world_exp" value="false"/>
+    <param name="/$(arg quad_name)/agile_autonomy/general/velocity_estimate_in_world_frame" value="false"/>
+    <param name="/$(arg quad_name)/agile_autonomy/general/process_every_nth_odometry" value="20"/>
+
+    <group ns="$(arg quad_name)">
+        <!-- Trajectory Planning -->
+        <node pkg="agile_autonomy" type="agile_autonomy_airsim" name="agile_autonomy" output="screen">
+            <rosparam file="$(find agile_autonomy)/parameters/default.yaml"/>
+            <rosparam file="$(find agile_autonomy)/parameters/mpc_params.yaml"/>
+            <rosparam file="$(find state_predictor)/parameters/hummingbird.yaml"/>
+            <param name="data_dir" value="$(find agile_autonomy)/../data"/>
+            <remap from="nw_setpoint/pose" to="/mav_wrapper/setpoint_planning/position"/>
+        </node>
+    </group>
+
+    <!--mav wrapper-->
+    <node name="mav_wrapper_node" pkg="px4_code" type="mav_wrapper_node" output="screen">   
+        <param name="mav_frame_id" value="/base_link"/>
+        <param name="world_frame_id" value="/map"/>
+        <param name="external_pose_topic" value="/zedm/zed_node/pose"/>
+        <param name="pose_on" value="true"/>
+    </node>
+
+</launch>

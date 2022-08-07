@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="output" default="log"/>
+    <arg name="publish_clock" default="false"/>
+    <arg name="is_vulkan" default="true"/>
+    <arg name="host" default="localhost" />
+
+    <!-- static_transform_publisher -->
+<!--    <node pkg="tf" type="static_transform_publisher" name="ned_to_enu_pub" args="0 0 0 1.57 0 3.14 PX4 world 100"/>-->
+    <node pkg="tf" type="static_transform_publisher" name="tf_airsim_world" args="0 0 0  0  0  0 world map 100" />
+<!--    <node pkg="tf" type="static_transform_publisher" name="tf_airsim_px4" args="0 0 0  1.57 0 3.14 PX4 map 100" />-->
+
+    <!-- Depth zed_node-->
+    <include file="$(find zed_wrapper)/launch/zedm.launch"/>
+
+    <!--    mavros-->
+    <arg name="fcu_url" default= "/dev/ttyTHS0:921600"/>
+    <arg name="gcs_url" default="" />
+    <arg name="tgt_system" default="1" />
+    <arg name="tgt_component" default="1" />
+    <node name="mavros" pkg="mavros" type="mavros_node">
+        <param name="fcu_url" value="$(arg fcu_url)" />
+        <param name="gcs_url" value="$(arg gcs_url)" />
+        <param name="target_system_id" value="$(arg tgt_system)" />
+        <param name="target_component_id" value="$(arg tgt_component)" />
+        <!--rosparam command="load" file="$(find mavros)/launch/px4_blacklist.yaml"-->
+        <!-- enable heartbeat send and reduce timeout -->
+        <param name="conn_heartbeat" value="5.0" />
+        <param name="conn_timeout" value="5.0" />
+        <!-- automatically start mavlink on USB -->
+        <param name="startup_px4_usb_quirk" value="true" />
+        <param name="mocap/use_tf" value="true"/>
+        <param name="mocap/use_pose" value="false"/>
+<!--        <param name="/mavros/conn/timesync_rate" value="0.0"/>-->
+        <remap from="/mavros/local_position/odom" to="/hummingbird/ground_truth/odometry"/>
+    </node>
+
+</launch>

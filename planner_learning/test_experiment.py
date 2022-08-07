@@ -4,14 +4,17 @@ import argparse
 import time
 import numpy as np
 import rospy
+import tensorflow as tf
 from PlannerLearning import PlannerAirsim
 from common import  MessageHandler
-
+import logging
 
 from config.settings import create_settings
 
-MAX_TIME_EXP = 500  # in second, if it takes more the process needs to be killed
 
+
+MAX_TIME_EXP = 500  # in second, if it takes more the process needs to be killed
+tf.get_logger().setLevel(logging.ERROR)
 
 class Trainer:
     def __init__(self, settings):
@@ -20,30 +23,14 @@ class Trainer:
         np.random.seed(self.settings.random_seed)
         self.msg_handler = MessageHandler()
 
-    # def start_experiment(self):
-    #     self.msg_handler.publish_reset()  # /success_reset
-    #     # place_quad_at_start(self.msg_handler)
-    #     # # Save point_cloud
-    #     # if self.settings.execute_nw_predictions:
-    #     #     self.msg_handler.publish_save_pc() /save_pc
-    #     # self.msg_handler.publish_autopilot_off()  # /hummingbird/autopilot/off
-    #     # reset quad to initial position
-    #     self.msg_handler.publish_arm_bridge()  # /hummingbird/bridge/arm
-    #     self.msg_handler.publish_autopilot_start()  # /hummingbird/autopilot/start
-
     def perform_testing(self):
         # Perform rollout just one time!
         self.learner = PlannerAirsim.PlanLearningAirsim(self.settings)
         # Start Experiment
         self.learner.maneuver_complete = False  # Just to be sure
-        # unity_start_pos = setup_sim(self.msg_handler, config=self.settings)
-        # self.msg_handler.publish_autopilot_off()
-        # self.start_experiment()
-        # self.msg_handler.publish_arm_bridge()  # /hummingbird/bridge/arm
         self.msg_handler.publish_reset()  # /success_reset
         # at this point agile autonomy plan reference trajectory
         # publish True "start flying" topic
-        # self.msg_handler.publish_autopilot_start()  # /hummingbird/autopilot/start
         start = time.time()
         exp_failed = False
         self.expert_done = False  # Re-init to be sure
@@ -56,12 +43,7 @@ class Trainer:
                 print("Current experiment failed. Finish the rollout")
                 exp_failed = True
                 break
-        # if not exp_failed:
-        #     # Wait one second to stop recording
-        #     time.sleep(1)
-        # else:
-        #     # Wait one second to stop recording
-        #     time.sleep(1)
+
 
 
 def main():
