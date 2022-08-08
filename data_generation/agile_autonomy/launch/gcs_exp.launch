@@ -2,5 +2,5 @@
     <!--mav gcs-->
     <node name="mav_gcs_node" pkg="px4_code" type="mav_gcs_node"/>
     <!-- Visualization -->
-    <node pkg="rviz" type="rviz" name="viz_face" args="-d $(find agile_autonomy)/resources/rviz/simulation_airsim.rviz"/>
+    <node pkg="rviz" type="rviz" name="viz_face" args="-d /home/seungwoo/catkin_ws/src/agile_autonomy/data_generation/agile_autonomy/launch/simulation_airsim.rviz"/>
 </launch>
